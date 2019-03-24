@@ -1,9 +1,11 @@
 import smtplib
 import RPi.GPIO as gpio
+import SimpleMFRC522
+import time
 
 from threading import *
 
-gpio.setmode(gpio.BOARD)
+gpio.setmode(gpio.BCM)
 
 alarm = True
 lock = Lock()
@@ -26,10 +28,10 @@ Subject: %s
 
 def alarming():
 	## Configurando pines para sensores
-	s1 = 29
-	s2 = 31
-	s3 = 33
-	s4 = 35
+	s1 = 5 # pin 29
+	s2 = 6 # pin 31
+	s3 = 13 # pin 33
+	s4 = 19 # pin 35
 
 	gpio.setup(s1,gpio.IN)
 	gpio.setup(s2,gpio.IN)
@@ -45,14 +47,32 @@ def alarming():
 	if alarm and (gpio.input(s1) or gpio.input(s2) or gpio.input(s3) or gpio.input(s4))
 		sendMail(sender,to,subject,body)
 
-def disable():
-	
+def disable(dId,dPasswd):
+	reader = SimpleMFRC522.SimpleMFRC522()
+
+	try:
+		id,text = reader.read()
+		if dId == id and dPasswd == text:
+			lock.acquire()
+			alarm = False
+			lock.release()
+
+		time.sleep(5)
+
+		lock.acquire()
+		alarm = True
+		lock.release()
+	except:
+		pass
 
 if __name__ == "__main__":
 	threads = []
 
+	rfidId = ''
+	rfidPasswd = ''
+
 	tAlarm = Thread(target=alarming)
 	tAlarm.start()
 
-	tDisable = Thread(target=disable)
+	tDisable = Thread(target=disable,args=(rfidID,rfidPasswd))
 	tDisable.start()
