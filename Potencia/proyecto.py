@@ -35,19 +35,19 @@ def alarming():
 
 	deltatie = 10
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
+
+	s1 = 16
+	s2 = 20
+	s3 = 21
+	s4 = 26
+
+	gpio.setup(s1,gpio.IN)
+	gpio.setup(s2,gpio.IN)
+	gpio.setup(s3,gpio.IN)
+	gpio.setup(s4,gpio.IN)
+
 	while True:
 		try:
-			## Configurando pines para sensores
-			s1 = 16
-			s2 = 20
-			s3 = 21
-			s4 = 26
-
-			gpio.setup(s1,gpio.IN)
-			gpio.setup(s2,gpio.IN)
-			gpio.setup(s3,gpio.IN)
-			gpio.setup(s4,gpio.IN)
-
 			## Datos para realizar envio de correo
 			sender = 'seguridad.potencia.ice@gmail.com'
 			to = ['miguel.frias@cetys.edu.mx','nataliab@cetys.edu.mx','ariana.landeros@cetys.edu.mx']
