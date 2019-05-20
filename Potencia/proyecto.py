@@ -10,6 +10,9 @@ from datetime import timedelta
 gpio.setmode(gpio.BCM)
 gpio.setwarnings(False)
 
+led_alarm = 20 # pin 38
+gpio.setup(led_alarm,gpio.OUT)
+
 alarm = True
 lock = Lock()
 
@@ -32,20 +35,19 @@ Subject: %s
 def alarming():
 	global alarm
 	global lock
+	global led_alarm
 
 	deltatie = 10
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
 
-	s1 = 16
-	s2 = 20
-	s3 = 21
-	s4 = 26
+	s1 = 21 # pin 40
+
+	reactive = 16 # pin 36
 
 	gpio.setup(s1,gpio.IN)
-	gpio.setup(s2,gpio.IN)
-	gpio.setup(s3,gpio.IN)
-	gpio.setup(s4,gpio.IN)
+	gpio.setup(reactive,gpio.OUT)
 
+	gpio.output(led_alarm,gpio.HIGH)
 	while True:
 		try:
 			## Datos para realizar envio de correo
@@ -54,9 +56,10 @@ def alarming():
 			subject = 'Testing mail'
 			body = 'I am testing the mail function'
 
-			if alarm and (gpio.input(s1) or gpio.input(s2) or gpio.input(s3) or gpio.input(s4)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
+			if alarm and (gpio.input(s1)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
+				gpio.output(reactive,true)
 				print('Sent message')
 		except KeyboardInterrupt:
 			break
@@ -66,10 +69,10 @@ def alarming():
 def disable(dId,dPasswd):
 	global alarm
 	global lock
+	global led_alarm
 
+	reader = SimpleMFRC522.SimpleMFRC522()
 	while True:
-		reader = SimpleMFRC522.SimpleMFRC522()
-
 		try:
 			id,text = reader.read()
 			print(str(id).strip(),'  ',text.strip())
@@ -77,6 +80,7 @@ def disable(dId,dPasswd):
 				lock.acquire()
 				alarm = False
 				lock.release()
+				gpio.output(led_alarm,gpio.LOW)
 				print('Disabled alarm')
 
 				time.sleep(120)
@@ -85,6 +89,7 @@ def disable(dId,dPasswd):
 				lock.acquire()
 				alarm = True
 				lock.release()
+				gpio.output(led_alarm,gpio.HIGH)
 		except KeyboardInterrupt:
 			break
 		except:
@@ -97,8 +102,12 @@ if __name__ == '__main__':
 	threads = []
 
 	tAlarm = Thread(target=alarming)
+	threads.append(tAlarm)
 	tAlarm.start()
 
 	tDisable = Thread(target=disable,args=(rfidId,rfidPasswd))
+	threads.append(tDisable)
 	tDisable.start()
 
+	for t in threads:
+		t.join()
