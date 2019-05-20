@@ -30,6 +30,9 @@ Subject: %s
 		print('Not working ...')
 
 def alarming():
+	global alarm
+	global lock
+
 	deltatie = 10
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
 	while True:
@@ -51,7 +54,6 @@ def alarming():
 			subject = 'Testing mail'
 			body = 'I am testing the mail function'
 
-			print(alarm)
 			if alarm and (gpio.input(s1) or gpio.input(s2) or gpio.input(s3) or gpio.input(s4)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
@@ -62,6 +64,9 @@ def alarming():
 			print('Error sending message')
 
 def disable(dId,dPasswd):
+	global alarm
+	global lock
+
 	while True:
 		reader = SimpleMFRC522.SimpleMFRC522()
 
@@ -91,7 +96,6 @@ if __name__ == '__main__':
 
 	threads = []
 
-	#alarming()
 	tAlarm = Thread(target=alarming)
 	tAlarm.start()
 
