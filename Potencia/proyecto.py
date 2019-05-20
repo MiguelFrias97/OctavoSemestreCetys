@@ -4,8 +4,11 @@ import SimpleMFRC522
 import time
 
 from threading import *
+from datetime import datetime
+from datetime import timedelta
 
 gpio.setmode(gpio.BCM)
+gpio.setwarnings(False)
 
 alarm = True
 lock = Lock()
@@ -27,52 +30,71 @@ Subject: %s
 		print('Not working ...')
 
 def alarming():
-	## Configurando pines para sensores
-	s1 = 5 # pin 29
-	s2 = 6 # pin 31
-	s3 = 13 # pin 33
-	s4 = 19 # pin 35
+	deltatie = 10
+	lastSent = datetime.now() - timedelta(seconds=deltatie)
+	while True:
+		try:
+			## Configurando pines para sensores
+			s1 = 16
+			s2 = 20
+			s3 = 21
+			s4 = 26
 
-	gpio.setup(s1,gpio.IN)
-	gpio.setup(s2,gpio.IN)
-	gpio.setup(s3,gpio.IN)
-	gpio.setup(s4,gpio.IN)
+			gpio.setup(s1,gpio.IN)
+			gpio.setup(s2,gpio.IN)
+			gpio.setup(s3,gpio.IN)
+			gpio.setup(s4,gpio.IN)
 
-	## Datos para realizar envio de correo
-	sender = 'seguridad.potencia.ice@gmail.com'
-	to = ['nataliab@cetys.edu.mx','ariana.landeros@cetys.edu.mx']
-	subject = 'Testing mail'
-	body = 'I am testing the mail function'
+			## Datos para realizar envio de correo
+			sender = 'seguridad.potencia.ice@gmail.com'
+			to = ['miguel.frias@cetys.edu.mx','nataliab@cetys.edu.mx','ariana.landeros@cetys.edu.mx']
+			subject = 'Testing mail'
+			body = 'I am testing the mail function'
 
-	if alarm and (gpio.input(s1) or gpio.input(s2) or gpio.input(s3) or gpio.input(s4))
-		sendMail(sender,to,subject,body)
+			print(alarm)
+			if alarm and (gpio.input(s1) or gpio.input(s2) or gpio.input(s3) or gpio.input(s4)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
+				sendMail(sender,to,subject,body)
+				lastSent = datetime.now()
+				print('Sent message')
+		except KeyboardInterrupt:
+			break
+		except:
+			print('Error sending message')
 
 def disable(dId,dPasswd):
-	reader = SimpleMFRC522.SimpleMFRC522()
+	while True:
+		reader = SimpleMFRC522.SimpleMFRC522()
 
-	try:
-		id,text = reader.read()
-		if dId == id and dPasswd == text:
-			lock.acquire()
-			alarm = False
-			lock.release()
+		try:
+			id,text = reader.read()
+			print(str(id).strip(),'  ',text.strip())
+			if dId == str(id).strip() and dPasswd == text.strip():
+				lock.acquire()
+				alarm = False
+				lock.release()
+				print('Disabled alarm')
 
-		time.sleep(5)
+				time.sleep(120)
 
-		lock.acquire()
-		alarm = True
-		lock.release()
-	except:
-		pass
+				print('Active alarm')
+				lock.acquire()
+				alarm = True
+				lock.release()
+		except KeyboardInterrupt:
+			break
+		except:
+			print('Error leyendo rfid')
 
-if __name__ == "__main__":
+if __name__ == '__main__':
+	rfidId = '94376169919'
+	rfidPasswd = 'IWWTTFS2019'
+
 	threads = []
 
-	rfidId = ''
-	rfidPasswd = ''
-
+	#alarming()
 	tAlarm = Thread(target=alarming)
 	tAlarm.start()
 
-	tDisable = Thread(target=disable,args=(rfidID,rfidPasswd))
+	tDisable = Thread(target=disable,args=(rfidId,rfidPasswd))
 	tDisable.start()
+
