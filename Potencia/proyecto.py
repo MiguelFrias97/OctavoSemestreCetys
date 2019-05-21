@@ -82,6 +82,7 @@ def alarming():
 	global alarm
 	global lock
 	global led_alarm
+	global active
 
 	deltatie = 10
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
@@ -109,8 +110,8 @@ def alarming():
 				lock.release()
 		except KeyboardInterrupt:
 			break
-		except:
-			print('Error sending message')
+		#except:
+		#	print('Error sending message')
 
 def disable(dId,dPasswd):
 	global alarm
