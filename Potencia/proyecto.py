@@ -2,10 +2,12 @@ import smtplib
 import RPi.GPIO as gpio
 import SimpleMFRC522
 import time
+import re
 
 from threading import *
 from datetime import datetime
 from datetime import timedelta
+from readEmail import *
 
 gpio.setmode(gpio.BCM)
 gpio.setwarnings(False)
@@ -15,6 +17,50 @@ gpio.setup(led_alarm,gpio.OUT)
 
 alarm = True
 lock = Lock()
+lock_isActive = Lock()
+active = False ## Esta variable indica si alguien paso por la puerta y activo la alarma
+
+def readMail():
+	global lock
+	global active
+
+	reactive = 16 # pin 36
+	gpio.setup(reactive,gpio.OUT)
+
+	while True:
+		try:
+			mail = FetchEmail('imap.gmail.com','seguridad.potencia.ice@gmail.com','ElectronicaPotencia')
+			mails = mail.fetch_unread_messages()
+
+			responses = {}
+			index = 1
+			for m in mails:
+				r = []
+				if m.is_multipart():
+					for payload in m.get_payload():
+						r.append(payload.get_payload())
+				else:
+					r.append(payload.get_payload())
+			responses['correo'+str(index)] = r
+			index += 1
+
+			for key in responses:
+				body = responses[key][0]
+				print(body)
+				if active and len(re.findall(r'Desactivar Alarma Poisson',body)):
+					print('Si se armo')
+					gpio.output(reactive,gpio.HIGH)
+					time.sleep(1)
+					gpio.output(reactive,gpio.LOW)
+					lock.acquire()
+					active = False
+					lock.release()
+			mail.close()
+			time.sleep(1)
+		except KeyboardInterrupt:
+			break
+		except:
+			pass
 
 def sendMail(sender,to,subject,body):
 	message =  """From: %s
@@ -58,6 +104,9 @@ def alarming():
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
 				print('Sent message')
+				lock.acquire()
+				active = True
+				lock.release()
 		except KeyboardInterrupt:
 			break
 		except:
@@ -139,6 +188,10 @@ if __name__ == '__main__':
 	tDisableIndoor = Thread(target=disableIndoor)
 	threads.append(tDisableIndoor)
 	tDisableIndoor.start()
+
+	tReadMail = Thread(target=readMail)
+	threads.append(tReadMail)
+	tReadMail.start()
 
 	for t in threads:
 		t.join()

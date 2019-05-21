@@ -2,10 +2,8 @@ import email
 import imaplib
 import os
 import subprocess
-import datetime
 import time
 
-from fileManagement import *
 
 class FetchEmail():
 
@@ -54,10 +52,10 @@ class FetchEmail():
         (result, messages) = self.connection.search(None, 'UnSeen')
         if result == "OK":
             for message in messages[0].split(' '):
-                try: 
+                try:
                     ret, data = self.connection.fetch(message,'(RFC822)')
                 except:
-                    print ("No new emails to read.")
+                    #print ("No new emails to read.")
                     self.close_connection()
                     exit()
 
@@ -69,16 +67,23 @@ class FetchEmail():
             return emails
 
 if __name__=="__main__":
-    mail = FetchEmail('outlook.office365.com','migue_tj_frias@hotmail.com','MiguelF210597')
+    mail = FetchEmail('imap.gmail.com','seguridad.potencia.ice@gmail.com','ElectronicaPotencia')
     mails = mail.fetch_unread_messages()
-    dirName = '/home/miguelfrias/Documents/filesEmail/'+datetime.datetime.now().strftime("%m-%d-%Y")
-    executeBash('mkdir '+dirName)
     print(mails)
-    for m in mails:
-        print(mail.save_attachment(m,dirName))
-    mail.close_connection()
 
-    executeBash('unzip -u '+dirName+'/*.zip')
-    create(dirName+'/','/home/miguelfrias/Documents/','path.txt')
-    #time.sleep(10)
-    #executeBash('lp '+dirName+'/*.pdf')
+    responses = {}
+    index = 1
+    for m in mails:
+	r = []
+	if m.is_multipart():
+	    for payload in m.get_payload():
+		r.append(payload.get_payload())
+	else:
+	    r.append(payload.get_payload())
+	responses['correo'+str(index)] = r
+	index += 1
+
+    for key in responses:
+	body = responses[key][0]
+	print(body)
+
