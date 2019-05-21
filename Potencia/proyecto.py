@@ -25,7 +25,7 @@ def readMail():
 	global active
 
 	reactive = 16 # pin 36
-	gpio.setup(reactive,gpio.OUT)
+	gpio.setup(reactive,gpio.OUT,initial=gpio.HIGH)
 
 	while True:
 		try:
@@ -49,9 +49,9 @@ def readMail():
 				print(body)
 				if active and len(re.findall(r'Desactivar Alarma Poisson',body)):
 					print('Si se armo')
-					gpio.output(reactive,gpio.HIGH)
-					time.sleep(1)
 					gpio.output(reactive,gpio.LOW)
+					time.sleep(1)
+					gpio.output(reactive,gpio.HIGH)
 					lock.acquire()
 					active = False
 					lock.release()
