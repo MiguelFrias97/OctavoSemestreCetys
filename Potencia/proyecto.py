@@ -41,26 +41,22 @@ def alarming():
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
 
 	s1 = 21 # pin 40
-
-	reactive = 16 # pin 36
-
 	gpio.setup(s1,gpio.IN)
-	gpio.setup(reactive,gpio.OUT)
 
 	gpio.output(led_alarm,gpio.HIGH)
+
+	## Datos para realizar envio de correo
+	sender = 'seguridad.potencia.ice@gmail.com'
+	to = ['miguel.frias@cetys.edu.mx','nataliab@cetys.edu.mx','ariana.landeros@cetys.edu.mx']
+	subject = 'Alarm Notification Mail'
+
 	while True:
 		try:
-			## Datos para realizar envio de correo
-			sender = 'seguridad.potencia.ice@gmail.com'
-			to = ['miguel.frias@cetys.edu.mx','nataliab@cetys.edu.mx','ariana.landeros@cetys.edu.mx']
-			subject = 'Testing mail'
-			body = 'I am testing the mail function'
-
 			if alarm and (gpio.input(s1)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
+				body = 'Estimado Usuario,\n\nLa alarma 1 ha sido activada con fecha ' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '.\n\nPara desactivarla contestar correo con la palabra "poisson". \n\nExcelente dia,Atte. Seguridad ICE'
+				print('Se Activo alarma')
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
-				gpio.output(reactive,true)
-				print('Sent message')
 		except KeyboardInterrupt:
 			break
 		except:
@@ -95,6 +91,36 @@ def disable(dId,dPasswd):
 		except:
 			print('Error leyendo rfid')
 
+def disableIndoor():
+	global alarm
+	global lock
+	global led_alarm
+
+	disable = 12
+	gpio.setup(disable,gpio.IN)
+	while True:
+		try:
+			if gpio.input(disable):
+				lock.acquire()
+				alarm = False
+				lock.release()
+				gpio.output(led_alarm,gpio.LOW)
+				print('Disabled alarm')
+
+				time.sleep(120)
+
+				print('Active alarm')
+				lock.acquire()
+				alarm = True
+				lock.release()
+				gpio.output(led_alarm,gpio.HIGH)
+		except KeyboardInterrupt:
+			break
+		except:
+			print('Error con la sedactivacion indoor')
+
+
+
 if __name__ == '__main__':
 	rfidId = '94376169919'
 	rfidPasswd = 'IWWTTFS2019'
@@ -108,6 +134,10 @@ if __name__ == '__main__':
 	tDisable = Thread(target=disable,args=(rfidId,rfidPasswd))
 	threads.append(tDisable)
 	tDisable.start()
+
+	tDisableIndoor = Thread(target=disableIndoor)
+	threads.append(tDisableIndoor)
+	tDisableIndoor.start()
 
 	for t in threads:
 		t.join()
