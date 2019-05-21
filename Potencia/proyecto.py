@@ -57,6 +57,7 @@ def alarming():
 				print('Se Activo alarma')
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
+				print('Sent message')
 		except KeyboardInterrupt:
 			break
 		except:
