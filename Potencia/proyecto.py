@@ -15,9 +15,6 @@ gpio.setwarnings(False)
 led_alarm = 20 # pin 38
 gpio.setup(led_alarm,gpio.OUT)
 
-reactive = 16 # pin 36
-gpio.setup(reactive,gpio.OUT,initial=gpio.HIGH)
-
 alarm = True
 lock = Lock()
 lock_isActive = Lock()
@@ -26,7 +23,9 @@ active = False ## Esta variable indica si alguien paso por la puerta y activo la
 def readMail():
 	global lock
 	global active
-	global reactive
+
+	reactive = 16 # pin 36
+	gpio.setup(reactive,gpio.OUT,initial=gpio.HIGH)
 
 	while True:
 		try:
@@ -84,6 +83,8 @@ def alarming():
 	global lock
 	global led_alarm
 	global active
+
+	time.sleep(15)
 
 	deltatie = 10
 	lastSent = datetime.now() - timedelta(seconds=deltatie)
@@ -179,6 +180,10 @@ if __name__ == '__main__':
 
 	threads = []
 
+	tReadMail = Thread(target=readMail)
+        threads.append(tReadMail)
+        tReadMail.start()
+
 	tAlarm = Thread(target=alarming)
 	threads.append(tAlarm)
 	tAlarm.start()
@@ -190,10 +195,6 @@ if __name__ == '__main__':
 	tDisableIndoor = Thread(target=disableIndoor)
 	threads.append(tDisableIndoor)
 	tDisableIndoor.start()
-
-	tReadMail = Thread(target=readMail)
-	threads.append(tReadMail)
-	tReadMail.start()
 
 	for t in threads:
 		t.join()
