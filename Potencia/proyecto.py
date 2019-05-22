@@ -104,12 +104,15 @@ def alarming():
 			if alarm and not(active)  and (gpio.input(s1)) and abs(datetime.now()-lastSent).total_seconds() > deltatie:
 				body = 'Estimado Usuario,\n\nLa alarma 1 ha sido activada con fecha ' + datetime.now().strftime("%Y-%m-%d %H:%M:%S") + '.\n\nPara desactivarla contestar correo con la palabra "poisson". \n\nExcelente dia,\nAtte. Seguridad ICE'
 				print('Se Activo alarma')
+				lock.acquire()
+				active=True
+				lock.release()
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
 				print('Sent message')
-				lock.acquire()
-				active = True
-				lock.release()
+				#lock.acquire()
+				#active = True
+				#lock.release()
 		except KeyboardInterrupt:
 			break
 		#except:
