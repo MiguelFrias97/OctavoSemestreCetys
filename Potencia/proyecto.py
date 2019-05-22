@@ -132,7 +132,7 @@ def disable(dId,dPasswd):
 				gpio.output(led_alarm,gpio.LOW)
 				print('Disabled alarm')
 
-				time.sleep(120)
+				time.sleep(30)
 
 				print('Active alarm')
 				lock.acquire()
@@ -149,7 +149,7 @@ def disableIndoor():
 	global lock
 	global led_alarm
 
-	disable = 12
+	disable = 12 # pin 32
 	gpio.setup(disable,gpio.IN)
 	while True:
 		try:
@@ -160,7 +160,7 @@ def disableIndoor():
 				gpio.output(led_alarm,gpio.LOW)
 				print('Disabled alarm')
 
-				time.sleep(120)
+				time.sleep(30)
 
 				print('Active alarm')
 				lock.acquire()
