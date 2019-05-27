@@ -159,12 +159,14 @@ def disableIndoor():
 	global alarm
 	global lock
 	global led_alarm
+	global active
+	global reactive
 
 	disable = 12 # pin 32
 	gpio.setup(disable,gpio.IN)
 	while True:
 		try:
-			if gpio.input(disable):
+			if gpio.input(disable) and active:
 				lock.acquire()
 				alarm = False
 				lock.release()
