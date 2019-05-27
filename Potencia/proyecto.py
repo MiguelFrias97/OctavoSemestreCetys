@@ -15,6 +15,9 @@ gpio.setwarnings(False)
 led_alarm = 20 # pin 38
 gpio.setup(led_alarm,gpio.OUT)
 
+buzzer = 14 # pin 8
+gpio.setup(buzzer,gpio.OUT)
+
 alarm = True
 lock = Lock()
 lock_isActive = Lock()
@@ -56,6 +59,7 @@ def readMail():
 					gpio.output(reactive,gpio.LOW)
 					time.sleep(4)
 					gpio.output(reactive,gpio.HIGH)
+					gpio.output(buzzer,gpio.LOW)
 					lock.acquire()
 					active = False
 					lock.release()
@@ -87,6 +91,7 @@ def alarming():
 	global lock
 	global led_alarm
 	global active
+	global buzzer
 
 	time.sleep(15)
 
@@ -111,6 +116,7 @@ def alarming():
 				lock.acquire()
 				active=True
 				lock.release()
+				gpio.output(buzzer,gpio.HIGH)
 				sendMail(sender,to,subject,body)
 				lastSent = datetime.now()
 				print('Sent message')
@@ -192,6 +198,7 @@ def turnOffRFID():
 	global lock2
 	global active
 	global lock
+	global buzzer
 
 	while True:
 		try:
@@ -200,6 +207,7 @@ def turnOffRFID():
                                 gpio.output(reactive,gpio.LOW)
                                 time.sleep(4)
                                	gpio.output(reactive,gpio.HIGH)
+				gpio.output(buzzer,gpio.LOW)
                                 lock.acquire()
                                 active = False
                                	lock.release()
