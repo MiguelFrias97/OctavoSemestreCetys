@@ -228,7 +228,7 @@ if __name__ == '__main__':
 	tDisableIndoor.start()
 
 	tTurnOff = Thread(target=turnOffRFID)
-	threads.append()
+	threads.append(tTurnOff)
 	tTurnOff.start()
 
 	for t in threads:
