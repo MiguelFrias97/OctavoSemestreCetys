@@ -158,6 +158,7 @@ def disable(dId,dPasswd):
 				lock2.acquire()
 				turnOffAlarm = True
 				lock2.reelease()
+			time.sleep(0.5)
 		except KeyboardInterrupt:
 			break
 		except:
