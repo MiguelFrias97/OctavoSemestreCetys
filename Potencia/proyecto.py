@@ -50,7 +50,7 @@ def readMail():
 				if active and len(re.findall(r'Desactivar Alarma Poisson',body)):
 					print('Si se armo')
 					gpio.output(reactive,gpio.LOW)
-					time.sleep(1)
+					time.sleep(4)
 					gpio.output(reactive,gpio.HIGH)
 					lock.acquire()
 					active = False
