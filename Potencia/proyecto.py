@@ -21,12 +21,14 @@ lock_isActive = Lock()
 lock2 = Lock()
 active = False ## Esta variable indica si alguien paso por la puerta y activo la alarma
 turnOffAlarm = False
+reactive = 16
 
 def readMail():
 	global lock
 	global active
+	global reactive
 
-	reactive = 16 # pin 36
+	#reactive = 16 # pin 36
 	gpio.setup(reactive,gpio.OUT,initial=gpio.HIGH)
 
 	while True:
