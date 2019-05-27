@@ -18,7 +18,9 @@ gpio.setup(led_alarm,gpio.OUT)
 alarm = True
 lock = Lock()
 lock_isActive = Lock()
+lock2 = Lock()
 active = False ## Esta variable indica si alguien paso por la puerta y activo la alarma
+turnOffAlarm = False
 
 def readMail():
 	global lock
@@ -122,6 +124,8 @@ def disable(dId,dPasswd):
 	global alarm
 	global lock
 	global led_alarm
+	global lock2
+	global turnOffAlarm
 
 	reader = SimpleMFRC522.SimpleMFRC522()
 	while True:
@@ -142,6 +146,10 @@ def disable(dId,dPasswd):
 				alarm = True
 				lock.release()
 				gpio.output(led_alarm,gpio.HIGH)
+			elif ('106845038948' == str(id).strip() and 'ICE2019' == str(text).strip()):
+				lock2.acquire()
+				turnOffAlarm = True
+				lock2.reelease()
 		except KeyboardInterrupt:
 			break
 		except:
@@ -175,7 +183,27 @@ def disableIndoor():
 		except:
 			print('Error con la sedactivacion indoor')
 
+def turnOffRFID():
+	global turnOffAlarm
+	global lock2
+	global active
+	global lock
 
+	while True:
+		try:
+			if turnOffAlarm:
+				print('Si se armo')
+                                gpio.output(reactive,gpio.LOW)
+                                time.sleep(4)
+                               	gpio.output(reactive,gpio.HIGH)
+                                lock.acquire()
+                                active = False
+                               	lock.release()
+				lock2.acquire()
+				turnOffAlarm = False
+				lock2.release()
+		except KeyboardInterrupt:
+			break
 
 if __name__ == '__main__':
 	rfidId = '94376169919'
@@ -198,6 +226,10 @@ if __name__ == '__main__':
 	tDisableIndoor = Thread(target=disableIndoor)
 	threads.append(tDisableIndoor)
 	tDisableIndoor.start()
+
+	tTurnOff = Thread(target=turnOffRFID)
+	threads.append()
+	tTurnOff.start()
 
 	for t in threads:
 		t.join()
