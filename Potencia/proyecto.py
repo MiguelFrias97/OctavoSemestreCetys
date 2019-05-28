@@ -134,6 +134,7 @@ def disable(dId,dPasswd):
 	global led_alarm
 	global lock2
 	global turnOffAlarm
+	global reactive
 
 	reader = SimpleMFRC522.SimpleMFRC522()
 	while True:
@@ -145,6 +146,7 @@ def disable(dId,dPasswd):
 				alarm = False
 				lock.release()
 				gpio.output(led_alarm,gpio.LOW)
+				gpio.output(reactive,gpio.LOW)
 				print('Disabled alarm')
 
 				time.sleep(30)
@@ -153,11 +155,12 @@ def disable(dId,dPasswd):
 				lock.acquire()
 				alarm = True
 				lock.release()
+				gpio.output(reactive,gpio.HIGH)
 				gpio.output(led_alarm,gpio.HIGH)
 			elif ('106845038948' == str(id).strip() and 'ICE2019' == str(text).strip()):
 				lock2.acquire()
 				turnOffAlarm = True
-				lock2.reelease()
+				lock2.release()
 			time.sleep(0.5)
 		except KeyboardInterrupt:
 			break
